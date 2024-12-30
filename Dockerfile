@@ -20,4 +20,4 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar /app/danny-store-1.0-SNAPSHOT.jar
 
 # Run service
-ENTRYPOINT ["java", "-jar", "/app/danny-store-1.0-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "/app/danny-store-1.0-SNAPSHOT.jar", "--spring.config.location=/app/src/main/resources/application.yml"]

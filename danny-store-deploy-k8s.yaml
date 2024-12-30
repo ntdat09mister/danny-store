@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: danny-store-deployment
+  namespace: danny-store
+  labels:
+    app: danny-store-deployment
+spec:
+  replicas: 2
+  revisionHistoryLimit: 11
+  selector:
+    matchLabels:
+      app: danny-store-deployment
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: danny-store-deployment
+    spec:
+      containers:
+        - name: danny-store
+          image: ntdat09mister/danny-store:v2
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: tcp
+              protocol: TCP
+          volumeMounts:
+            - name: config-volume
+            mountPath: /config/application.yml
+            subPath: application.yml
+      volumes:
+        - name: danny-store-configmap
+          configMap:
+            name: danny-store-configmap
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: danny-store-service
+  namespace: danny-store
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+    - name: tcp
+      port: 80
+      targetPort: 80
+  selector:
+    app: danny-store-deployment
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: danny-store-ingress
+  namespace: danny-store
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: danny.store.vn
+      http:
+        paths:
+          - backend:
+              service:
+                name: danny-store-service
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
